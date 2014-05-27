@@ -19,27 +19,41 @@ module WebAutomation
   class DuokanAutomation
     include Capybara::DSL
   
-    def collectDailySale(username, password)
-      visit('https://account.xiaomi.com/pass/serviceLogin?callback=http%3A%2F%2Flogin.dushu.xiaomi.com%2Fdk_id%2Fapi%2Fcheckin%3Ffollowup%3Dhttp%253A%252F%252Fwww.duokan.com%253Fapp_id%253Dweb%26sign%3DNGNmYWI3MjU0OTQwNjI1OTkwMDgzZDZlYWFkZmE4MTc%3D&sid=dushu')
-
+    def WaitFor(waitXPath)
+      begin
+        find(:xpath, waitXPath).set(true)
+        return true
+      rescue
+        return false
+      end
+    end
+  
+    def Login(url, username, password)
+      visit(url)
       within_frame 'miniLoginFrame' do
         fill_in "miniLogin_username", :with => username
         fill_in "miniLogin_pwd", :with => password
         click_button "message_LOGIN_IMMEDIATELY"
       end
-  
-      # Wait until the page loaded and the expected link appear
-      find(:xpath, "//li/a[img[@alt='限时免费']]").set(true)
-      all(:xpath, "//li/a[img[@alt='限时免费']]").each do |a|
-        visit(a[:href])
-        break
-      end
+    end
     
-      all(:xpath, "//a[@class='u-btn j-get']").each do |a|
-        a.click
-        return true
+    def DuokanMain(username, password)
+      url = 'https://account.xiaomi.com/pass/serviceLogin?callback=http%3A%2F%2Flogin.dushu.xiaomi.com%2Fdk_id%2Fapi%2Fcheckin%3Ffollowup%3Dhttp%253A%252F%252Fwww.duokan.com%253Fapp_id%253Dweb%26sign%3DNGNmYWI3MjU0OTQwNjI1OTkwMDgzZDZlYWFkZmE4MTc%3D&sid=dushu';
+      expSaleImage = "//li/a[img[@alt='限时免费']]"
+      expPurchaseButton = "//a[@class='u-btn j-get']"
+  
+      Login(url, username, password)
+      return "login failed" unless WaitFor(expSaleImage) 
+      find(:xpath, expSaleImage) do |a|
+        visit(a[:href])
       end
-      false
+
+      return "ignore" unless WaitFor(expPurchaseButton)
+      find(:xpath, expPurchaseButton) do |a|
+        a.click
+      end
+      
+      return "purchased"
     end
   end
 end
@@ -53,8 +67,8 @@ if ($0 == __FILE__)
 
   username = ARGV[0]
   password = ARGV[1]
-  autometa = WebAutomation::DuokanAutomation.new
-  
-  puts "[#{Time.now}] " +
-    (autometa.collectDailySale(username, password) ? "purchased" : "ignore")
+
+  auto = WebAutomation::DuokanAutomation.new
+  msg = auto.DuokanMain(username, password)
+  puts "[#{Time.now}] #{msg}";
 end
