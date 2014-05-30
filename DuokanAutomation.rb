@@ -12,9 +12,6 @@ Capybara.register_driver :selenium do |app|
   Capybara::Selenium::Driver.new(app, :browser => :chrome)
 end
 
-# Switch to latest browser window/tab
-#page.driver.browser.switch_to.window (page.driver.browser.window_handles.last)
-
 module WebAutomation
   class DuokanAutomation
     include Capybara::DSL
@@ -26,6 +23,11 @@ module WebAutomation
       rescue
         return false
       end
+    end
+    
+    # Switch to latest browser window/tab
+    def SwitchTab
+      page.driver.browser.switch_to.window (page.driver.browser.window_handles.last)
     end
   
     def Login(url, username, password)
@@ -39,19 +41,16 @@ module WebAutomation
     
     def DuokanMain(username, password)
       url = 'https://account.xiaomi.com/pass/serviceLogin?callback=http%3A%2F%2Flogin.dushu.xiaomi.com%2Fdk_id%2Fapi%2Fcheckin%3Ffollowup%3Dhttp%253A%252F%252Fwww.duokan.com%253Fapp_id%253Dweb%26sign%3DNGNmYWI3MjU0OTQwNjI1OTkwMDgzZDZlYWFkZmE4MTc%3D&sid=dushu';
-      expSaleImage = "//li/a[img[@alt='限时免费']]"
-      expPurchaseButton = "//a[@class='u-btn j-get']"
-  
       Login(url, username, password)
-      return "login failed" unless WaitFor(expSaleImage) 
-      find(:xpath, expSaleImage) do |a|
-        visit(a[:href])
-      end
 
+      expSaleImage = "//li/a[img[@alt='限时免费']]"
+      return "login failed" unless WaitFor(expSaleImage) 
+      find(:xpath, expSaleImage).click
+      SwitchTab()
+
+      expPurchaseButton = "//a[@class='u-btn j-get']"
       return "ignore" unless WaitFor(expPurchaseButton)
-      find(:xpath, expPurchaseButton) do |a|
-        a.click
-      end
+      find(:xpath, expPurchaseButton).click
       
       return "purchased"
     end
