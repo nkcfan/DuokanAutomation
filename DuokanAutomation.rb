@@ -32,11 +32,9 @@ module WebAutomation
   
     def Login(url, username, password)
       visit(url)
-      within_frame 'miniLoginFrame' do
-        fill_in "miniLogin_username", :with => username
-        fill_in "miniLogin_pwd", :with => password
-        click_button "message_LOGIN_IMMEDIATELY"
-      end
+      fill_in "miniLogin_username", :with => username
+      fill_in "miniLogin_pwd", :with => password
+      click_button "message_LOGIN_IMMEDIATELY"
     end
     
     def DuokanMain(username, password)
